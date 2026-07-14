@@ -420,6 +420,7 @@
       renderHistory();
       summaryEl.textContent = `이번 추첨 결과: ${result.main.join(", ")} | 보너스 ${result.bonus}`;
       animateApp();
+
       try {
         await saveDraw(result);
       } catch (error) {
