@@ -244,18 +244,9 @@
     }
 
     @keyframes popBall {
-      0% {
-        opacity: 0;
-        transform: translateY(18px) scale(0.82);
-      }
-      60% {
-        opacity: 1;
-        transform: translateY(-4px) scale(1.04);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+      0% { opacity: 0; transform: translateY(18px) scale(0.82); }
+      60% { opacity: 1; transform: translateY(-4px) scale(1.04); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     @keyframes flashBg {
@@ -324,12 +315,6 @@
     </section>
   </main>
 
-  <script>
-    // Fill these in before deploying or testing locally.
-    // Only use the public anon key here, never the service role key.
-    window.__SUPABASE_URL__ = "__SUPABASE_URL__";
-    window.__SUPABASE_ANON_KEY__ = "__SUPABASE_ANON_KEY__";
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const app = document.getElementById("app");
@@ -341,6 +326,9 @@
     const drawBtn = document.getElementById("drawBtn");
     const resetBtn = document.getElementById("resetBtn");
     const history = [];
+
+    window.__SUPABASE_URL__ = window.__SUPABASE_URL__ || "__SUPABASE_URL__";
+    window.__SUPABASE_ANON_KEY__ = window.__SUPABASE_ANON_KEY__ || "__SUPABASE_ANON_KEY__";
 
     const supabaseUrl =
       window.SUPABASE_URL ||
@@ -432,7 +420,12 @@
       renderHistory();
       summaryEl.textContent = `이번 추첨 결과: ${result.main.join(", ")} | 보너스 ${result.bonus}`;
       animateApp();
-      await saveDraw(result);
+      try {
+        await saveDraw(result);
+      } catch (error) {
+        console.error("Unexpected draw error:", error);
+        statusTextEl.textContent = "추첨은 완료됐지만 저장 단계에서 문제가 생겼습니다.";
+      }
     });
 
     resetBtn.addEventListener("click", () => {
