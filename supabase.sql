@@ -12,6 +12,7 @@ alter table public.lottery_draws
   enable row level security;
 
 -- Allow anonymous/public inserts from the app.
+drop policy if exists "Allow public insert lottery draws" on public.lottery_draws;
 create policy "Allow public insert lottery draws"
   on public.lottery_draws
   for insert
@@ -19,6 +20,7 @@ create policy "Allow public insert lottery draws"
   with check (true);
 
 -- Allow the app to read the most recent draws.
+drop policy if exists "Allow public select lottery draws" on public.lottery_draws;
 create policy "Allow public select lottery draws"
   on public.lottery_draws
   for select
