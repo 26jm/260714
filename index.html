@@ -295,7 +295,7 @@
     <section class="hero">
       <div class="eyebrow"><span class="dot"></span> 실시간 추첨기</div>
       <h1>로또 추첨기</h1>
-      <p class="sub">버튼을 누르면 1부터 45까지에서 중복 없이 6개를 뽑고, 보너스 번호 1개를 함께 보여줍니다. Apple 스타일을 따라 장식은 줄이고 결과는 또렷하게 보이도록 정리했습니다.</p>
+      <p class="sub">버튼을 누르면 1부터 45까지에서 중복 없이 6개를 뽑고, 보너스 번호 1개를 함께 보여줍니다. 추첨 결과는 Supabase 데이터베이스에 저장됩니다.</p>
     </section>
 
     <section class="content">
@@ -313,7 +313,7 @@
           <button class="button-primary" id="drawBtn" type="button">새로 뽑기</button>
           <button class="button-secondary" id="resetBtn" type="button">기록 초기화</button>
         </div>
-        <div class="hint">매번 새 번호를 생성합니다.</div>
+        <div class="hint" id="statusText">매번 새 번호를 생성합니다.</div>
       </div>
 
       <div class="history">
@@ -324,15 +324,31 @@
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const app = document.getElementById("app");
     const numbersEl = document.getElementById("numbers");
     const bonusSlotEl = document.getElementById("bonusSlot");
     const historyEl = document.getElementById("history");
     const summaryEl = document.getElementById("summary");
+    const statusTextEl = document.getElementById("statusText");
     const drawBtn = document.getElementById("drawBtn");
     const resetBtn = document.getElementById("resetBtn");
     const history = [];
+
+    const supabaseUrl =
+      window.SUPABASE_URL ||
+      window.__SUPABASE_URL__ ||
+      "";
+    const supabaseAnonKey =
+      window.SUPABASE_ANON_KEY ||
+      window.__SUPABASE_ANON_KEY__ ||
+      "";
+
+    const supabase =
+      supabaseUrl && supabaseAnonKey && window.supabase
+        ? window.supabase.createClient(supabaseUrl, supabaseAnonKey)
+        : null;
 
     function drawLottery() {
       const pool = Array.from({ length: 45 }, (_, i) => i + 1);
@@ -383,19 +399,45 @@
       app.classList.add("flash");
     }
 
-    drawBtn.addEventListener("click", () => {
+    async function saveDraw(result) {
+      if (!supabase) {
+        statusTextEl.textContent = "Supabase 연결 정보가 없어 저장하지 않았습니다.";
+        return;
+      }
+
+      const { error } = await supabase
+        .from("lottery_draws")
+        .insert([
+          {
+            numbers: result.main,
+            bonus_number: result.bonus,
+          }
+        ]);
+
+      if (error) {
+        console.error("Supabase save error:", error);
+        statusTextEl.textContent = "저장은 실패했지만 추첨은 완료되었습니다.";
+        return;
+      }
+
+      statusTextEl.textContent = "추첨 결과를 데이터베이스에 저장했습니다.";
+    }
+
+    drawBtn.addEventListener("click", async () => {
       const result = drawLottery();
       history.unshift(result);
       renderNumbers(result.main, result.bonus);
       renderHistory();
       summaryEl.textContent = `이번 추첨 결과: ${result.main.join(", ")} | 보너스 ${result.bonus}`;
       animateApp();
+      await saveDraw(result);
     });
 
     resetBtn.addEventListener("click", () => {
       history.length = 0;
       renderHistory();
       summaryEl.textContent = "기록이 초기화되었습니다.";
+      statusTextEl.textContent = "매번 새 번호를 생성합니다.";
       animateApp();
     });
 
