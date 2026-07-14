@@ -12,7 +12,6 @@ alter table public.lottery_draws
   enable row level security;
 
 -- Allow anonymous/public inserts from the app.
--- If you want stricter control, replace `to anon` with authenticated-only access.
 create policy "Allow public insert lottery draws"
   on public.lottery_draws
   for insert
@@ -20,13 +19,11 @@ create policy "Allow public insert lottery draws"
   with check (true);
 
 -- Allow the app to read the most recent draws.
--- If this is meant to be private, remove this policy and read through a server function only.
 create policy "Allow public select lottery draws"
   on public.lottery_draws
   for select
   to anon
   using (true);
 
--- Optional helper index for recent history queries.
 create index if not exists lottery_draws_created_at_idx
   on public.lottery_draws (created_at desc);
