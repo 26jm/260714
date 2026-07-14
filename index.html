@@ -315,7 +315,6 @@
     </section>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const app = document.getElementById("app");
     const numbersEl = document.getElementById("numbers");
@@ -326,21 +325,6 @@
     const drawBtn = document.getElementById("drawBtn");
     const resetBtn = document.getElementById("resetBtn");
     const history = [];
-
-    window.__SUPABASE_URL__ = window.__SUPABASE_URL__ || "__SUPABASE_URL__";
-    window.__SUPABASE_ANON_KEY__ = window.__SUPABASE_ANON_KEY__ || "__SUPABASE_ANON_KEY__";
-
-    const supabaseUrl =
-      window.SUPABASE_URL ||
-      (window.__SUPABASE_URL__ && window.__SUPABASE_URL__ !== "__SUPABASE_URL__" ? window.__SUPABASE_URL__ : "") ||
-      "";
-    const supabaseAnonKey =
-      window.SUPABASE_ANON_KEY ||
-      (window.__SUPABASE_ANON_KEY__ && window.__SUPABASE_ANON_KEY__ !== "__SUPABASE_ANON_KEY__" ? window.__SUPABASE_ANON_KEY__ : "") ||
-      "";
-    const supabase = supabaseUrl && supabaseAnonKey && window.supabase
-      ? window.supabase.createClient(supabaseUrl, supabaseAnonKey)
-      : null;
 
     function drawLottery() {
       const pool = Array.from({ length: 45 }, (_, i) => i + 1);
@@ -391,42 +375,14 @@
       app.classList.add("flash");
     }
 
-    async function saveDraw(result) {
-      if (!supabase) {
-        statusTextEl.textContent = "Supabase 연결 정보가 없어 저장하지 않았습니다.";
-        return;
-      }
-
-      const { error } = await supabase.from("lottery_draws").insert([
-        {
-          numbers: result.main,
-          bonus_number: result.bonus,
-        },
-      ]);
-
-      if (error) {
-        console.error("Supabase save error:", error);
-        statusTextEl.textContent = "저장은 실패했지만 추첨은 완료되었습니다.";
-        return;
-      }
-
-      statusTextEl.textContent = "추첨 결과를 데이터베이스에 저장했습니다.";
-    }
-
-    drawBtn.addEventListener("click", async () => {
+    drawBtn.addEventListener("click", () => {
       const result = drawLottery();
       history.unshift(result);
       renderNumbers(result.main, result.bonus);
       renderHistory();
       summaryEl.textContent = `이번 추첨 결과: ${result.main.join(", ")} | 보너스 ${result.bonus}`;
+      statusTextEl.textContent = "추첨이 완료되었습니다.";
       animateApp();
-
-      try {
-        await saveDraw(result);
-      } catch (error) {
-        console.error("Unexpected draw error:", error);
-        statusTextEl.textContent = "추첨은 완료됐지만 저장 단계에서 문제가 생겼습니다.";
-      }
     });
 
     resetBtn.addEventListener("click", () => {
