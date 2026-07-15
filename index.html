@@ -381,7 +381,18 @@
       app.classList.add("flash");
     }
 
+    function trackEvent(eventName, params = {}) {
+      if (typeof gtag === "function") {
+        gtag("event", eventName, params);
+      }
+    }
+
     drawBtn.addEventListener("click", () => {
+      trackEvent("lottery_draw_click", {
+        button_name: "new_draw",
+        page_name: "lottery_picker"
+      });
+
       const result = drawLottery();
       history.unshift(result);
       renderNumbers(result.main, result.bonus);
@@ -389,9 +400,20 @@
       summaryEl.textContent = `이번 추첨 결과: ${result.main.join(", ")} | 보너스 ${result.bonus}`;
       statusTextEl.textContent = "추첨이 완료되었습니다.";
       animateApp();
+
+      trackEvent("lottery_draw_result", {
+        button_name: "new_draw",
+        main_numbers: result.main.join(","),
+        bonus_number: result.bonus
+      });
     });
 
     resetBtn.addEventListener("click", () => {
+      trackEvent("lottery_reset_click", {
+        button_name: "reset_history",
+        page_name: "lottery_picker"
+      });
+
       history.length = 0;
       renderHistory();
       summaryEl.textContent = "기록이 초기화되었습니다.";
@@ -403,6 +425,9 @@
     renderNumbers(initial.main, initial.bonus);
     renderHistory();
     summaryEl.textContent = `초기 표시: ${initial.main.join(", ")} | 보너스 ${initial.bonus}`;
+    trackEvent("lottery_page_view", {
+      page_name: "lottery_picker"
+    });
   </script>
 </body>
 </html>
